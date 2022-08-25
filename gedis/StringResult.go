@@ -22,3 +22,10 @@ func (s *StringResult) UnwrapOr(str string) string  {
 	}
 	return s.Result
 }
+
+func (s *StringResult) UnwrapOrElse(f func() string) string  {
+	if s.Err != nil {
+		return f()
+	}
+	return s.Result
+}
