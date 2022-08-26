@@ -39,6 +39,14 @@ func main()  {
 	*/
 
 	r := gin.New()
+	r.Use(func(context *gin.Context) {
+		defer func() {
+			if e := recover();e!=nil {
+				context.JSON(400,gin.H{"message":e})
+			}
+		}()
+		context.Next()
+	})
 	r.Handle("GET","/news/:id", func(context *gin.Context) {
 		// 1、从对象池 获取新闻缓存 对象
 		newsCache := lib.NewsCache()

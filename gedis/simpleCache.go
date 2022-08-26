@@ -15,10 +15,11 @@ type SimpleCache struct {
 	 Expire 	time.Duration // 过期时间
 	 DBGetter   DBGetterFunc  // 一旦缓存没有，DB获取的方法
 	 Serilizer string  //  序列化方式
+	 Policy  CachePolicy
 }
 
-func NewSimpleCache(operation *StringOperation, expire time.Duration, serilizer string) *SimpleCache {
-	return &SimpleCache{Operation: operation, Expire: expire, Serilizer: serilizer}
+func NewSimpleCache(operation *StringOperation, expire time.Duration, serilizer string,policy CachePolicy) *SimpleCache {
+	return &SimpleCache{Operation: operation, Expire: expire, Serilizer: serilizer,Policy:policy}
 }
 
 
@@ -30,6 +31,9 @@ func (s *SimpleCache) SetCache(key string,value interface{})  {
 
 // 获取缓存
 func (s *SimpleCache) GetCache(key string) (ret interface{})  {
+	if s.Policy != nil {  // 检查策略
+		s.Policy.Before(key)
+	}
 	if s.Serilizer == Serilizer_JSON {
 		f := func() string {
 			obj := s.DBGetter()
