@@ -18,7 +18,8 @@ type SimpleCache struct {
 	 Policy  CachePolicy
 }
 
-func NewSimpleCache(operation *StringOperation, expire time.Duration, serilizer string,policy CachePolicy) *SimpleCache {
+func NewSimpleCache(operation *StringOperation, expire time.Duration, serilizer string, policy CachePolicy) *SimpleCache {
+	policy.SetOperation(operation)
 	return &SimpleCache{Operation: operation, Expire: expire, Serilizer: serilizer,Policy:policy}
 }
 
@@ -44,6 +45,12 @@ func (s *SimpleCache) GetCache(key string) (ret interface{})  {
 			return  string(b)
 		}
 		ret = s.Operation.Get(key).UnwrapOrElse(f)
+		s.SetCache(key,ret)
+	}
+
+	if ret.(string) == "" && s.Policy != nil {
+		s.Policy.IfNil(key,"")
+	} else {
 		s.SetCache(key,ret)
 	}
 
