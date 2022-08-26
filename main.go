@@ -40,10 +40,13 @@ func main()  {
 
 	r := gin.New()
 	r.Handle("GET","/news/:id", func(context *gin.Context) {
+		// 1、从对象池 获取新闻缓存 对象
 		newsCache := lib.NewsCache()
 		defer lib.ReleaseNewsCache(newsCache)
+		// 2、获取参数，设置DBGetter
 		newsID := context.Param("id")
-		newsCache.DBGetter = lib.NewsDBGetter(newsID)
+		newsCache.DBGetter = lib.NewsDBGetter(newsID) // 一旦缓存没有，则需要从数据库中去取
+		// 3、取缓存输出（一旦没有，上面的DBGetter会被调用）
 		context.Header("Context-type","application/json")
 		context.String(200,newsCache.GetCache("news"+newsID).(string))
 

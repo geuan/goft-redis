@@ -11,7 +11,8 @@ var NewsCachePool *sync.Pool
 func init()  {
 	NewsCachePool = &sync.Pool{
 		New: func() interface{} {
-			return gedis.NewSimpleCache(gedis.NewStringOperation(),time.Second*15)
+			return gedis.NewSimpleCache(gedis.NewStringOperation(),time.Second*15,
+				gedis.Serilizer_JSON) // 指定序列化 是 JSON
 		},
 	}
 }

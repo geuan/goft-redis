@@ -1,17 +1,27 @@
 package gedis
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
-type DBGetterFunc func()  string
+const   (
+	Serilizer_JSON = "json"
+)
+
+type DBGetterFunc func()  interface{}
 type SimpleCache struct {
-	 Operation  *StringOperation
-	 Expire 	time.Duration
-	 DBGetter   DBGetterFunc
+	 Operation  *StringOperation // 操作类
+	 Expire 	time.Duration // 过期时间
+	 DBGetter   DBGetterFunc  // 一旦缓存没有，DB获取的方法
+	 Serilizer string  //  序列化方式
 }
 
-func NewSimpleCache(Operation *StringOperation, expire time.Duration) *SimpleCache {
-	return &SimpleCache{Operation: Operation, Expire: expire}
+func NewSimpleCache(operation *StringOperation, expire time.Duration, serilizer string) *SimpleCache {
+	return &SimpleCache{Operation: operation, Expire: expire, Serilizer: serilizer}
 }
+
+
 
 // 设置缓存
 func (s *SimpleCache) SetCache(key string,value interface{})  {
@@ -20,7 +30,18 @@ func (s *SimpleCache) SetCache(key string,value interface{})  {
 
 // 获取缓存
 func (s *SimpleCache) GetCache(key string) (ret interface{})  {
-	ret = s.Operation.Get(key).UnwrapOrElse(s.DBGetter)
-	s.SetCache(key,ret)
+	if s.Serilizer == Serilizer_JSON {
+		f := func() string {
+			obj := s.DBGetter()
+			b,err := json.Marshal(obj)
+			if err != nil {
+				return ""
+			}
+			return  string(b)
+		}
+		ret = s.Operation.Get(key).UnwrapOrElse(f)
+		s.SetCache(key,ret)
+	}
+
 	return ret
 }
